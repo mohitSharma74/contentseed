@@ -70,6 +70,7 @@ export function App() {
           <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
             <h2 className="font-semibold">Input</h2>
             <button
+              type="button"
               onClick={handleLoadSample}
               className="text-sm text-[var(--primary)] hover:underline"
             >
@@ -79,6 +80,7 @@ export function App() {
           <MarkdownEditor value={markdown} onChange={setMarkdown} />
           <div className="p-4 border-t border-[var(--border)]">
             <button
+              type="button"
               onClick={handleGenerate}
               disabled={!markdown.trim() || isParsing}
               className="w-full py-3 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"

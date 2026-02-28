@@ -11,6 +11,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
   
   return (
     <button
+      type="button"
       onClick={toggleTheme}
       className={cn(
         'p-2 rounded-md hover:bg-[var(--muted)] transition-colors',

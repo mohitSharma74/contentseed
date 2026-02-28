@@ -28,6 +28,7 @@ export function PlatformTabs({ activePlatform, onPlatformChange, output }: Platf
       <div className="flex border-b border-[var(--border)]">
         {platforms.map((platform) => (
           <button
+            type="button"
             key={platform.id}
             onClick={() => onPlatformChange(platform.id)}
             className={cn(

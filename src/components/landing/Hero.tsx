@@ -1,7 +1,18 @@
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Twitter, Linkedin, MessageCircle, Mail } from 'lucide-react';
 
 export function Hero() {
+  const navigate = useNavigate();
+  
+  const handleTryDemo = () => {
+    navigate('/app');
+    setTimeout(() => {
+      const event = new CustomEvent('loadSamplePost');
+      window.dispatchEvent(event);
+    }, 100);
+  };
+  
   return (
     <section className="py-24 px-6 text-center">
       <h1 className="text-5xl font-bold mb-6 tracking-tight">
@@ -21,10 +32,8 @@ export function Hero() {
           Start Repurposing <ArrowRight className="h-5 w-5" />
         </Link>
         <button
-          onClick={() => {
-            const event = new CustomEvent('loadSamplePost');
-            window.dispatchEvent(event);
-          }}
+          type="button"
+          onClick={handleTryDemo}
           className="px-6 py-3 border border-[var(--border)] rounded-lg font-medium hover:bg-[var(--muted)] transition-colors"
         >
           Try Demo

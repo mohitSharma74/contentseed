@@ -11,6 +11,7 @@ export function SamplePostButton({ onLoad }: SamplePostButtonProps) {
 
   return (
     <button
+      type="button"
       onClick={handleClick}
       className="text-sm text-[var(--primary)] hover:underline"
     >

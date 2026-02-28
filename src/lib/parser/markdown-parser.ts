@@ -1,6 +1,6 @@
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
-import { toString } from 'mdast-util-to-string';
+import { toString as mdastToString } from 'mdast-util-to-string';
 import type { Root, Heading, Paragraph, RootContent } from 'mdast';
 
 export async function parseMarkdown(markdown: string): Promise<Root> {
@@ -15,7 +15,7 @@ export function extractTitle(ast: Root): string {
   );
   
   if (firstHeading) {
-    return toString(firstHeading);
+    return mdastToString(firstHeading);
   }
   
   const firstParagraph = ast.children.find(
@@ -23,7 +23,7 @@ export function extractTitle(ast: Root): string {
   );
   
   if (firstParagraph) {
-    const text = toString(firstParagraph);
+    const text = mdastToString(firstParagraph);
     return text.slice(0, 100);
   }
   
@@ -35,7 +35,7 @@ export function extractHeadings(ast: Root): string[] {
   
   for (const node of ast.children) {
     if (node.type === 'heading' && node.depth >= 1 && node.depth <= 3) {
-      headings.push(toString(node));
+      headings.push(mdastToString(node));
     }
   }
   
@@ -47,7 +47,7 @@ export function extractParagraphs(ast: Root): string[] {
   
   for (const node of ast.children) {
     if (node.type === 'paragraph') {
-      const text = toString(node);
+      const text = mdastToString(node);
       if (text.length > 50) {
         paragraphs.push(text);
       }
@@ -96,7 +96,7 @@ export function extractStats(ast: Root): string[] {
   
   for (const node of ast.children) {
     if (node.type === 'paragraph') {
-      const text = toString(node);
+      const text = mdastToString(node);
       const matches = text.match(statsRegex);
       if (matches) {
         stats.push(...matches);
@@ -110,13 +110,13 @@ export function extractStats(ast: Root): string[] {
 export function extractTldr(ast: Root): string | undefined {
   for (const node of ast.children) {
     if (node.type === 'heading') {
-      const text = toString(node).toLowerCase();
+      const text = mdastToString(node).toLowerCase();
       if (text.includes('tldr') || text.includes('tl;dr') || text === 'summary') {
         const nextIndex = ast.children.indexOf(node) + 1;
         if (nextIndex < ast.children.length) {
           const nextNode = ast.children[nextIndex];
           if (nextNode.type === 'paragraph') {
-            return toString(nextNode);
+            return mdastToString(nextNode);
           }
         }
       }
