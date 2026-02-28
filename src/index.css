@@ -1,0 +1,82 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@theme {
+  --font-sans: 'Geist Mono', 'JetBrains Mono', ui-monospace, monospace;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --color-background: oklch(0.18 0.004 308.19);
+  --color-foreground: oklch(0.81 0 0);
+  --color-primary: oklch(0.72 0.134 49.98);
+  --color-secondary: oklch(0.59 0.044 196.02);
+  --color-muted: oklch(0.25 0 0);
+  --color-border: oklch(0.25 0 0);
+  --color-destructive: oklch(0.59 0.044 196.02);
+
+  --color-twitter: #1DA1F2;
+  --color-linkedin: #0A66C2;
+  --color-reddit: #FF4500;
+  --color-substack: #FF6719;
+
+  --radius-lg: 0.75rem;
+  --radius-md: 0.5rem;
+  --radius-sm: 0.25rem;
+}
+
+@layer base {
+  :root {
+    --background: oklch(0.18 0.004 308.19);
+    --foreground: oklch(0.81 0 0);
+    --primary: oklch(0.72 0.134 49.98);
+    --primary-foreground: oklch(0.18 0.004 308.19);
+    --secondary: oklch(0.59 0.044 196.02);
+    --secondary-foreground: oklch(0.18 0.004 308.19);
+    --muted: oklch(0.25 0 0);
+    --muted-foreground: oklch(0.67 0.137 48.51);
+    --accent: oklch(0.59 0.044 196.02);
+    --accent-foreground: oklch(0.18 0.004 308.19);
+    --destructive: oklch(0.59 0.044 196.02);
+    --destructive-foreground: oklch(0.81 0 0);
+    --border: oklch(0.25 0 0);
+    --input: oklch(0.25 0 0);
+    --ring: oklch(0.72 0.134 49.98);
+  }
+
+  .light {
+    --background: oklch(1.0 0 0);
+    --foreground: oklch(0.21 0.032 264.66);
+    --primary: oklch(0.67 0.137 48.51);
+    --primary-foreground: oklch(1.0 0 0);
+    --secondary: oklch(0.54 0.040 196.03);
+    --secondary-foreground: oklch(1.0 0 0);
+    --muted: oklch(0.97 0.003 264.54);
+    --muted-foreground: oklch(0.54 0.040 196.03);
+    --accent: oklch(0.54 0.040 196.03);
+    --accent-foreground: oklch(0.21 0.032 264.66);
+    --destructive: oklch(0.64 0.208 25.33);
+    --destructive-foreground: oklch(1.0 0 0);
+    --border: oklch(0.93 0.006 264.53);
+    --input: oklch(0.93 0.006 264.53);
+    --ring: oklch(0.67 0.137 48.51);
+  }
+
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--background);
+    color: var(--foreground);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+}
