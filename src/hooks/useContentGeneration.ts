@@ -87,6 +87,45 @@ export function useContentGeneration() {
     [generateForPlatform]
   );
 
+  const generateForPlatforms = useCallback(
+    async (markdown: string, platforms: Platform[], options: Partial<GenerationOptions> = {}) => {
+      if (platforms.length === 0) {
+        setState(prev => ({ ...prev, error: 'Please select at least one platform' }));
+        return;
+      }
+
+      setState(prev => ({ ...prev, isGenerating: true, error: null }));
+
+      try {
+        const content = await extractContent(markdown);
+
+        const results = await Promise.all(
+          platforms.map(platform =>
+            generateForPlatform(content, platform, options).catch(err => {
+              console.error(`Error generating ${platform}:`, err);
+              return null;
+            })
+          )
+        );
+
+        setState(prev => {
+          const newOutputs = { ...prev.outputs };
+          platforms.forEach((platform, index) => {
+            newOutputs[platform] = results[index];
+          });
+          return { ...prev, isGenerating: false, outputs: newOutputs };
+        });
+      } catch (err) {
+        setState(prev => ({
+          ...prev,
+          isGenerating: false,
+          error: err instanceof Error ? err.message : 'Generation failed',
+        }));
+      }
+    },
+    [generateForPlatform]
+  );
+
   const regenerate = useCallback(
     async (platform: Platform, options: Partial<GenerationOptions> = {}) => {
       const apiKey = getApiKey();
@@ -161,6 +200,7 @@ export function useContentGeneration() {
   return {
     ...state,
     generateAll,
+    generateForPlatforms,
     regenerate,
     clearOutputs,
     setDemoOutputs,

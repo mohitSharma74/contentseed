@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { MarkdownEditor } from '@/components/input/MarkdownEditor';
+import { PlatformSelector } from '@/components/input/PlatformSelector';
 import { PlatformTabs } from '@/components/output/PlatformTabs';
 import { ToastContainer } from '@/components/ui/ToastContainer';
+import { ExportPreviewModal } from '@/components/export/ExportPreviewModal';
 import { useMarkdownParser } from '@/hooks/useMarkdownParser';
 import { useContentGeneration } from '@/hooks/useContentGeneration';
 import samplePost from '@/lib/demo/sample-post.md?raw';
@@ -16,8 +18,11 @@ export function App() {
   const [activePlatform, setActivePlatform] = useState<Platform>('twitter');
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   const [isDemoMode, setIsDemoMode] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportPlatform, setExportPlatform] = useState<Platform | null>(null);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>(['twitter', 'linkedin', 'reddit', 'substack']);
   const { parse, isParsing: isParsingMarkdown } = useMarkdownParser();
-  const { generateAll, regenerate, isGenerating, outputs, error, clearOutputs, setDemoOutputs } = useContentGeneration();
+  const { generateForPlatforms, regenerate, isGenerating, outputs, error, clearOutputs, setDemoOutputs } = useContentGeneration();
 
   useEffect(() => {
     const handleLoadSample = () => {
@@ -62,6 +67,7 @@ export function App() {
 
   const handleGenerate = async () => {
     if (!markdown.trim()) return;
+    if (selectedPlatforms.length === 0) return;
     
     const apiKey = getApiKey();
     
@@ -71,17 +77,30 @@ export function App() {
     }
     
     await parse(markdown);
-    await generateAll(markdown);
+    await generateForPlatforms(markdown, selectedPlatforms);
   };
 
   const handleDemoMode = () => {
     setIsDemoMode(true);
     setMarkdown(samplePost);
+    setSelectedPlatforms(['twitter', 'linkedin', 'reddit', 'substack']);
   };
 
   const handleRegenerate = () => {
     regenerate(activePlatform);
   };
+
+  const handleExport = (platform?: Platform) => {
+    setExportPlatform(platform || null);
+    setShowExportModal(true);
+  };
+
+  const handleExportAll = () => {
+    setExportPlatform(null);
+    setShowExportModal(true);
+  };
+
+  const hasOutputs = Object.values(outputs).some((o) => o !== null);
 
   return (
     <div className="min-h-screen bg-[var(--background)] flex flex-col">
@@ -99,18 +118,24 @@ export function App() {
             </button>
           </div>
           <MarkdownEditor value={markdown} onChange={setMarkdown} />
-          <div className="p-4 border-t border-[var(--border)] space-y-2">
+          <div className="p-4 border-t border-[var(--border)] space-y-3">
             {error && (
               <p className="text-sm text-red-500 text-center">{error}</p>
             )}
-            <button
-              type="button"
-              onClick={handleGenerate}
-              disabled={!markdown.trim() || isGenerating || isParsingMarkdown}
-              className="w-full py-3 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isGenerating ? 'Generating...' : 'Generate for All Platforms'}
-            </button>
+            <div className="flex items-center gap-3">
+              <PlatformSelector
+                selectedPlatforms={selectedPlatforms}
+                onChange={setSelectedPlatforms}
+              />
+              <button
+                type="button"
+                onClick={handleGenerate}
+                disabled={!markdown.trim() || selectedPlatforms.length === 0 || isGenerating || isParsingMarkdown}
+                className="flex-1 py-3 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isGenerating ? 'Generating...' : 'Generate'}
+              </button>
+            </div>
           </div>
         </div>
         
@@ -122,11 +147,21 @@ export function App() {
             isDemoMode={isDemoMode}
             onRegenerate={handleRegenerate}
             isRegenerating={isGenerating}
+            onExport={handleExport}
+            onExportAll={handleExportAll}
+            hasOutputs={hasOutputs}
           />
         </div>
       </main>
       
       <ApiKeyModal open={showApiKeyModal} onOpenChange={setShowApiKeyModal} />
+      <ExportPreviewModal
+        open={showExportModal}
+        onOpenChange={setShowExportModal}
+        outputs={outputs}
+        title={markdown.split('\n')[0]?.replace(/^#+\s*/, '')}
+        singlePlatform={exportPlatform || undefined}
+      />
       <ToastContainer />
     </div>
   );

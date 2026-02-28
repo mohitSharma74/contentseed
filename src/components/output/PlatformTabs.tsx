@@ -1,4 +1,4 @@
-import { Twitter, Linkedin, MessageCircle, Mail } from 'lucide-react';
+import { Twitter, Linkedin, MessageCircle, Mail, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Platform, PlatformOutput } from '@/types';
 import { TwitterPreview, LinkedInPreview, RedditPreview, SubstackPreview } from './previews';
@@ -11,6 +11,9 @@ interface PlatformTabsProps {
   isDemoMode?: boolean;
   onRegenerate?: () => void;
   isRegenerating?: boolean;
+  onExport?: (platform: Platform) => void;
+  onExportAll?: () => void;
+  hasOutputs?: boolean;
 }
 
 const platforms: { id: Platform; label: string; icon: typeof Twitter }[] = [
@@ -41,18 +44,36 @@ export function PlatformTabs({
   isDemoMode,
   onRegenerate,
   isRegenerating,
+  onExport,
+  onExportAll,
+  hasOutputs,
 }: PlatformTabsProps) {
   const PreviewComponent = output ? platformPreviews[activePlatform] : null;
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      {isDemoMode && (
-        <div className="px-4 py-2 bg-[var(--primary)]/10 border-b border-[var(--border)]">
-          <p className="text-sm text-[var(--primary)] text-center">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--border)] bg-[var(--muted)]/10">
+        {isDemoMode && (
+          <p className="text-sm text-[var(--primary)]">
             Demo Mode — Pre-generated output
           </p>
-        </div>
-      )}
+        )}
+        {!isDemoMode && !output && (
+          <p className="text-sm text-[var(--muted-foreground)]">
+            Generate content to see output
+          </p>
+        )}
+        {hasOutputs && onExportAll && (
+          <button
+            type="button"
+            onClick={onExportAll}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-[var(--secondary)] text-[var(--secondary-foreground)] rounded-md hover:opacity-90 transition-opacity"
+          >
+            <Download className="h-4 w-4" />
+            Export All
+          </button>
+        )}
+      </div>
       <div className="flex border-b border-[var(--border)]">
         {platforms.map((platform) => (
           <button
@@ -93,6 +114,7 @@ export function PlatformTabs({
           output={output}
           onRegenerate={onRegenerate}
           isRegenerating={isRegenerating}
+          onExport={() => onExport?.(activePlatform)}
         />
       )}
     </div>
