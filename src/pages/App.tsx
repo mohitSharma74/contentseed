@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { MarkdownEditor } from '@/components/input/MarkdownEditor';
 import { PlatformTabs } from '@/components/output/PlatformTabs';
+import { ToastContainer } from '@/components/ui/ToastContainer';
 import { useMarkdownParser } from '@/hooks/useMarkdownParser';
 import { useContentGeneration } from '@/hooks/useContentGeneration';
 import samplePost from '@/lib/demo/sample-post.md?raw';
@@ -16,7 +17,7 @@ export function App() {
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   const [isDemoMode, setIsDemoMode] = useState(false);
   const { parse, isParsing: isParsingMarkdown } = useMarkdownParser();
-  const { generateAll, isGenerating, outputs, error, clearOutputs, setDemoOutputs } = useContentGeneration();
+  const { generateAll, regenerate, isGenerating, outputs, error, clearOutputs, setDemoOutputs } = useContentGeneration();
 
   useEffect(() => {
     const handleLoadSample = () => {
@@ -78,6 +79,10 @@ export function App() {
     setMarkdown(samplePost);
   };
 
+  const handleRegenerate = () => {
+    regenerate(activePlatform);
+  };
+
   return (
     <div className="min-h-screen bg-[var(--background)] flex flex-col">
       <Header />
@@ -115,11 +120,14 @@ export function App() {
             onPlatformChange={setActivePlatform}
             output={outputs[activePlatform]}
             isDemoMode={isDemoMode}
+            onRegenerate={handleRegenerate}
+            isRegenerating={isGenerating}
           />
         </div>
       </main>
       
       <ApiKeyModal open={showApiKeyModal} onOpenChange={setShowApiKeyModal} />
+      <ToastContainer />
     </div>
   );
 }

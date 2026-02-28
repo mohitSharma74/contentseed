@@ -1,12 +1,16 @@
 import { Twitter, Linkedin, MessageCircle, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Platform, PlatformOutput } from '@/types';
+import { TwitterPreview, LinkedInPreview, RedditPreview, SubstackPreview } from './previews';
+import { ActionButtons } from './ActionButtons';
 
 interface PlatformTabsProps {
   activePlatform: Platform;
   onPlatformChange: (platform: Platform) => void;
   output: PlatformOutput | null;
   isDemoMode?: boolean;
+  onRegenerate?: () => void;
+  isRegenerating?: boolean;
 }
 
 const platforms: { id: Platform; label: string; icon: typeof Twitter }[] = [
@@ -23,7 +27,23 @@ const platformColors: Record<Platform, string> = {
   substack: '#FF6719',
 };
 
-export function PlatformTabs({ activePlatform, onPlatformChange, output, isDemoMode }: PlatformTabsProps) {
+const platformPreviews = {
+  twitter: TwitterPreview,
+  linkedin: LinkedInPreview,
+  reddit: RedditPreview,
+  substack: SubstackPreview,
+};
+
+export function PlatformTabs({
+  activePlatform,
+  onPlatformChange,
+  output,
+  isDemoMode,
+  onRegenerate,
+  isRegenerating,
+}: PlatformTabsProps) {
+  const PreviewComponent = output ? platformPreviews[activePlatform] : null;
+
   return (
     <div className="flex flex-col h-full min-h-0">
       {isDemoMode && (
@@ -55,40 +75,26 @@ export function PlatformTabs({ activePlatform, onPlatformChange, output, isDemoM
           </button>
         ))}
       </div>
-      
-      <div className="flex-1 overflow-auto p-4">
-        {output ? (
-          <div className="space-y-4">
-            {output.hook && (
-              <div className="p-3 bg-[var(--muted)] rounded-lg">
-                <p className="text-sm font-medium text-[var(--muted-foreground)]">Hook</p>
-                <p className="mt-1">{output.hook}</p>
-              </div>
-            )}
-            <div className="whitespace-pre-wrap text-sm">{output.content}</div>
-            {output.hashtags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {output.hashtags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-2 py-1 text-xs rounded-full"
-                    style={{
-                      backgroundColor: `${platformColors[output.platform]}20`,
-                      color: platformColors[output.platform],
-                    }}
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
+
+      <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-[var(--muted)]/20">
+        {output && PreviewComponent ? (
+          <PreviewComponent output={output} />
         ) : (
-          <div className="h-full flex items-center justify-center text-[var(--muted-foreground)]">
-            <p>Generate content to see output</p>
+          <div className="text-[var(--muted-foreground)] text-center">
+            <p className="mb-2">Generate content to see output</p>
+            <p className="text-sm">Paste your blog post and click &quot;Generate for All Platforms&quot;</p>
           </div>
         )}
       </div>
+
+      {output && (
+        <ActionButtons
+          platform={activePlatform}
+          output={output}
+          onRegenerate={onRegenerate}
+          isRegenerating={isRegenerating}
+        />
+      )}
     </div>
   );
 }
