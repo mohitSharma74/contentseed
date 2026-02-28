@@ -6,6 +6,7 @@ interface PlatformTabsProps {
   activePlatform: Platform;
   onPlatformChange: (platform: Platform) => void;
   output: PlatformOutput | null;
+  isDemoMode?: boolean;
 }
 
 const platforms: { id: Platform; label: string; icon: typeof Twitter }[] = [
@@ -22,9 +23,16 @@ const platformColors: Record<Platform, string> = {
   substack: '#FF6719',
 };
 
-export function PlatformTabs({ activePlatform, onPlatformChange, output }: PlatformTabsProps) {
+export function PlatformTabs({ activePlatform, onPlatformChange, output, isDemoMode }: PlatformTabsProps) {
   return (
     <div className="flex flex-col h-full min-h-0">
+      {isDemoMode && (
+        <div className="px-4 py-2 bg-[var(--primary)]/10 border-b border-[var(--border)]">
+          <p className="text-sm text-[var(--primary)] text-center">
+            Demo Mode — Pre-generated output
+          </p>
+        </div>
+      )}
       <div className="flex border-b border-[var(--border)]">
         {platforms.map((platform) => (
           <button

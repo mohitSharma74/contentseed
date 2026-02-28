@@ -54,7 +54,7 @@ export function getApiKey(): string | null {
   return config?.apiKey ?? null;
 }
 
-export function getProvider(): 'anthropic' | 'openai' {
+export function getProvider(): 'anthropic' | 'openai' | 'gemini' {
   const config = loadProviderConfig();
   return config?.provider ?? 'anthropic';
 }

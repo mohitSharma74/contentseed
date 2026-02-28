@@ -3,19 +3,20 @@ import { Header } from '@/components/layout/Header';
 import { MarkdownEditor } from '@/components/input/MarkdownEditor';
 import { PlatformTabs } from '@/components/output/PlatformTabs';
 import { useMarkdownParser } from '@/hooks/useMarkdownParser';
+import { useContentGeneration } from '@/hooks/useContentGeneration';
 import samplePost from '@/lib/demo/sample-post.md?raw';
+import sampleOutputs from '@/lib/demo/sample-outputs.json';
 import type { Platform, PlatformOutput } from '@/types';
+import { getApiKey } from '@/lib/security/key-manager';
+import { ApiKeyModal } from '@/components/settings/ApiKeyModal';
 
 export function App() {
   const [markdown, setMarkdown] = useState('');
   const [activePlatform, setActivePlatform] = useState<Platform>('twitter');
-  const [outputs, setOutputs] = useState<Record<Platform, PlatformOutput | null>>({
-    twitter: null,
-    linkedin: null,
-    reddit: null,
-    substack: null,
-  });
-  const { parse, isParsing } = useMarkdownParser();
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(false);
+  const { parse, isParsing: isParsingMarkdown } = useMarkdownParser();
+  const { generateAll, isGenerating, outputs, error, clearOutputs, setDemoOutputs } = useContentGeneration();
 
   useEffect(() => {
     const handleLoadSample = () => {
@@ -25,40 +26,55 @@ export function App() {
     return () => window.removeEventListener('loadSamplePost', handleLoadSample);
   }, []);
 
+  useEffect(() => {
+    if (isDemoMode) {
+      clearOutputs();
+      const demoOutputs: Record<Platform, PlatformOutput> = {
+        twitter: {
+          platform: 'twitter',
+          content: sampleOutputs.twitter.content,
+          hashtags: sampleOutputs.twitter.hashtags,
+          hook: sampleOutputs.twitter.hook,
+        },
+        linkedin: {
+          platform: 'linkedin',
+          content: sampleOutputs.linkedin.content,
+          hashtags: sampleOutputs.linkedin.hashtags,
+          hook: sampleOutputs.linkedin.hook,
+        },
+        reddit: {
+          platform: 'reddit',
+          content: sampleOutputs.reddit.content,
+          hashtags: sampleOutputs.reddit.hashtags,
+          hook: sampleOutputs.reddit.hook,
+        },
+        substack: {
+          platform: 'substack',
+          content: sampleOutputs.substack.content,
+          hashtags: sampleOutputs.substack.hashtags,
+          hook: sampleOutputs.substack.hook,
+        },
+      };
+      setDemoOutputs(demoOutputs);
+    }
+  }, [isDemoMode, clearOutputs, setDemoOutputs]);
+
   const handleGenerate = async () => {
     if (!markdown.trim()) return;
-    await parse(markdown);
     
-    const demoOutputs = await import('@/lib/demo/sample-outputs.json');
-    setOutputs({
-      twitter: {
-        platform: 'twitter',
-        content: demoOutputs.twitter.content,
-        hashtags: demoOutputs.twitter.hashtags,
-        hook: demoOutputs.twitter.hook,
-      },
-      linkedin: {
-        platform: 'linkedin',
-        content: demoOutputs.linkedin.content,
-        hashtags: demoOutputs.linkedin.hashtags,
-        hook: demoOutputs.linkedin.hook,
-      },
-      reddit: {
-        platform: 'reddit',
-        content: demoOutputs.reddit.content,
-        hashtags: demoOutputs.reddit.hashtags,
-        hook: demoOutputs.reddit.hook,
-      },
-      substack: {
-        platform: 'substack',
-        content: demoOutputs.substack.content,
-        hashtags: demoOutputs.substack.hashtags,
-        hook: demoOutputs.substack.hook,
-      },
-    });
+    const apiKey = getApiKey();
+    
+    if (!apiKey) {
+      setShowApiKeyModal(true);
+      return;
+    }
+    
+    await parse(markdown);
+    await generateAll(markdown);
   };
 
-  const handleLoadSample = () => {
+  const handleDemoMode = () => {
+    setIsDemoMode(true);
     setMarkdown(samplePost);
   };
 
@@ -71,21 +87,24 @@ export function App() {
             <h2 className="font-semibold">Input</h2>
             <button
               type="button"
-              onClick={handleLoadSample}
+              onClick={handleDemoMode}
               className="text-sm text-[var(--primary)] hover:underline"
             >
-              Load Sample Post
+              Try Sample Post
             </button>
           </div>
           <MarkdownEditor value={markdown} onChange={setMarkdown} />
-          <div className="p-4 border-t border-[var(--border)]">
+          <div className="p-4 border-t border-[var(--border)] space-y-2">
+            {error && (
+              <p className="text-sm text-red-500 text-center">{error}</p>
+            )}
             <button
               type="button"
               onClick={handleGenerate}
-              disabled={!markdown.trim() || isParsing}
+              disabled={!markdown.trim() || isGenerating || isParsingMarkdown}
               className="w-full py-3 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isParsing ? 'Generating...' : 'Generate for All Platforms'}
+              {isGenerating ? 'Generating...' : 'Generate for All Platforms'}
             </button>
           </div>
         </div>
@@ -95,9 +114,12 @@ export function App() {
             activePlatform={activePlatform}
             onPlatformChange={setActivePlatform}
             output={outputs[activePlatform]}
+            isDemoMode={isDemoMode}
           />
         </div>
       </main>
+      
+      <ApiKeyModal open={showApiKeyModal} onOpenChange={setShowApiKeyModal} />
     </div>
   );
 }

@@ -28,7 +28,7 @@ export interface GenerationOptions {
 }
 
 export interface ProviderConfig {
-  provider: 'anthropic' | 'openai';
+  provider: 'anthropic' | 'openai' | 'gemini';
   apiKey: string;
   rememberKey: boolean;
 }
