@@ -11,6 +11,7 @@ interface PlatformTabsProps {
   isDemoMode?: boolean;
   onRegenerate?: () => void;
   isRegenerating?: boolean;
+  disableRegenerate?: boolean;
   onExport?: (platform: Platform) => void;
   onExportAll?: () => void;
   hasOutputs?: boolean;
@@ -53,6 +54,7 @@ export function PlatformTabs({
   isDemoMode,
   onRegenerate,
   isRegenerating,
+  disableRegenerate,
   onExport,
   onExportAll,
   hasOutputs,
@@ -144,6 +146,7 @@ export function PlatformTabs({
           output={output}
           onRegenerate={onRegenerate}
           isRegenerating={isRegenerating}
+          disableRegenerate={disableRegenerate}
           onExport={() => onExport?.(activePlatform)}
         />
       )}

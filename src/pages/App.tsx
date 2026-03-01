@@ -39,6 +39,8 @@ export function App() {
     clearOutputs,
     setDemoOutputs,
   } = useContentGeneration();
+  const currentProvider = getProvider();
+  const hasApiKey = Boolean(getApiKey() ?? getProviderApiKeyFallback(currentProvider));
 
   useEffect(() => {
     const handleLoadSample = () => {
@@ -114,9 +116,7 @@ export function App() {
   };
 
   const handleRegenerate = async () => {
-    const provider = getProvider();
-    const apiKey = getApiKey() ?? getProviderApiKeyFallback(provider);
-    if (!apiKey) {
+    if (!hasApiKey) {
       setShowApiKeyModal(true);
       return;
     }
@@ -141,6 +141,7 @@ export function App() {
   };
 
   const hasOutputs = Object.values(outputs).some((o) => o !== null);
+  const requiresApiKeyForRegenerate = Boolean(outputs[activePlatform]) && !hasApiKey;
   const firstResultReady = Boolean(timings.firstResultAt);
   const firstResultMs = timings.firstResultAt && timings.startedAt
     ? timings.firstResultAt - timings.startedAt
@@ -207,8 +208,23 @@ export function App() {
             onChange={setQuickEditSettings}
             onApply={handleRegenerate}
             isApplying={platformStatus[activePlatform] === 'generating'}
-            canApply={Boolean(outputs[activePlatform]) && !isGenerating}
+            canApply={Boolean(outputs[activePlatform]) && !isGenerating && hasApiKey}
           />
+          {requiresApiKeyForRegenerate && (
+            <div className="mx-4 mt-3 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+              <p className="text-amber-200">
+                API key required to regenerate {activePlatform} output
+                {isDemoMode ? ' in Demo Mode' : ''}.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowApiKeyModal(true)}
+                className="mt-2 rounded-md border border-amber-400/50 px-2.5 py-1.5 text-xs font-medium text-amber-100 hover:bg-amber-500/15"
+              >
+                Configure API Key
+              </button>
+            </div>
+          )}
           <PlatformTabs
             activePlatform={activePlatform}
             onPlatformChange={setActivePlatform}
@@ -216,6 +232,7 @@ export function App() {
             isDemoMode={isDemoMode}
             onRegenerate={handleRegenerate}
             isRegenerating={platformStatus[activePlatform] === 'generating'}
+            disableRegenerate={!hasApiKey}
             onExport={handleExport}
             onExportAll={handleExportAll}
             hasOutputs={hasOutputs}

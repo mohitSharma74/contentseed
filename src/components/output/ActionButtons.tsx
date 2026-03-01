@@ -8,6 +8,7 @@ interface ActionButtonsProps {
   output: PlatformOutput | null;
   onRegenerate?: () => void;
   isRegenerating?: boolean;
+  disableRegenerate?: boolean;
   onExport?: () => void;
 }
 
@@ -16,6 +17,7 @@ export function ActionButtons({
   output,
   onRegenerate,
   isRegenerating,
+  disableRegenerate,
   onExport,
 }: ActionButtonsProps) {
   const { addToast } = useToast();
@@ -63,7 +65,8 @@ export function ActionButtons({
         <button
           type="button"
           onClick={onRegenerate}
-          disabled={isRegenerating}
+          disabled={isRegenerating || disableRegenerate}
+          title={disableRegenerate ? 'Configure API key to enable regenerate' : undefined}
           className={cn(
             'flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium',
             'bg-[var(--muted)] text-[var(--foreground)] hover:bg-[var(--muted)]/80 transition-colors',
@@ -71,7 +74,7 @@ export function ActionButtons({
           )}
         >
           <RefreshCw className={cn('h-4 w-4', isRegenerating && 'animate-spin')} />
-          {isRegenerating ? 'Regenerating...' : 'Regenerate'}
+          {isRegenerating ? 'Regenerating...' : disableRegenerate ? 'API Key Required' : 'Regenerate'}
         </button>
       )}
 

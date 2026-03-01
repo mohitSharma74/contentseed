@@ -119,7 +119,7 @@ function linearToSrgb(value: number): number {
     return 12.92 * value;
   }
 
-  return 1.055 * Math.pow(value, 1 / 2.4) - 0.055;
+  return 1.055 * value ** (1 / 2.4) - 0.055;
 }
 
 function formatAlpha(alpha: number): string {
