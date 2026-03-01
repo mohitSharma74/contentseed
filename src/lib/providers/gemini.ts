@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { LLMProvider, PlatformOutput, GenerationOptions } from './types';
 import { buildPrompt } from '@/lib/prompts/platform-prompts';
+import { getModelFor } from '@/lib/config/env';
 
 interface GeminiModelConfig {
   model: string;
@@ -18,7 +19,7 @@ export class GeminiProvider implements LLMProvider {
   async validateKey(apiKey: string): Promise<boolean> {
     try {
       const testClient = new GoogleGenerativeAI(apiKey);
-      const model = testClient.getGenerativeModel({ model: 'gemini-2.5-pro' });
+      const model = testClient.getGenerativeModel({ model: getModelFor('gemini', 'fast') });
       await model.generateContent('test');
       return true;
     } catch {
@@ -53,19 +54,19 @@ export class GeminiProvider implements LLMProvider {
     switch (mode) {
       case 'quality':
         return {
-          model: 'gemini-2.5-pro',
+          model: getModelFor('gemini', 'quality'),
           maxTokens: 1700,
           temperature: 0.8,
         };
       case 'balanced':
         return {
-          model: 'gemini-2.5-pro',
+          model: getModelFor('gemini', 'balanced'),
           maxTokens: 1200,
           temperature: 0.7,
         };
       default:
         return {
-          model: 'gemini-2.5-pro',
+          model: getModelFor('gemini', 'fast'),
           maxTokens: 800,
           temperature: 0.5,
         };

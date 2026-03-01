@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { Bot } from 'lucide-react';
 import { ApiKeyModal } from './ApiKeyModal';
 import { getApiKey, getProvider } from '@/lib/security/key-manager';
+import { getProviderApiKeyFallback } from '@/lib/config/env';
 
 export function ProviderToggle() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const hasApiKey = !!getApiKey();
   const currentProvider = getProvider();
+  const hasApiKey = !!(getApiKey() ?? getProviderApiKeyFallback(currentProvider));
 
   return (
     <>

@@ -10,6 +10,7 @@ import { createProvider } from '@/lib/providers/provider-factory';
 import { extractContent } from '@/lib/parser/content-extractor';
 import type { LLMProvider } from '@/lib/providers/types';
 import { getApiKey, getProvider, getSpeedMode } from '@/lib/security/key-manager';
+import { getProviderApiKeyFallback } from '@/lib/config/env';
 
 interface GenerationTimings {
   startedAt: number | null;
@@ -93,7 +94,8 @@ export function useContentGeneration() {
         return;
       }
 
-      const apiKey = getApiKey();
+      const providerType = getProvider();
+      const apiKey = getApiKey() ?? getProviderApiKeyFallback(providerType);
       if (!apiKey) {
         setState(prev => ({ ...prev, error: 'No API key configured' }));
         return;
@@ -103,7 +105,6 @@ export function useContentGeneration() {
       generationRunRef.current = runId;
 
       const startedAt = Date.now();
-      const providerType = getProvider();
       const provider = createProvider(providerType, apiKey);
       const orderedPlatforms = prioritizePlatforms(platforms, priorityPlatform);
 
@@ -229,7 +230,8 @@ export function useContentGeneration() {
 
   const regenerate = useCallback(
     async (platform: Platform, options: Partial<GenerationOptions> = {}) => {
-      const apiKey = getApiKey();
+      const providerType = getProvider();
+      const apiKey = getApiKey() ?? getProviderApiKeyFallback(providerType);
       if (!apiKey) {
         setState(prev => ({
           ...prev,
@@ -259,7 +261,6 @@ export function useContentGeneration() {
           throw new Error('No existing output to regenerate');
         }
 
-        const providerType = getProvider();
         const provider = createProvider(providerType, apiKey);
 
         const generationOptions: GenerationOptions = {

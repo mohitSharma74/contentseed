@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { LLMProvider, PlatformOutput, GenerationOptions } from './types';
 import { buildPrompt } from '@/lib/prompts/platform-prompts';
+import { getModelFor } from '@/lib/config/env';
 
 interface AnthropicModelConfig {
   model: string;
@@ -21,7 +22,7 @@ export class AnthropicProvider implements LLMProvider {
     try {
       const testClient = new Anthropic({ apiKey });
       await testClient.messages.create({
-        model: 'claude-sonnet-4-6-20250514',
+        model: getModelFor('anthropic', 'fast'),
         max_tokens: 1,
         messages: [{ role: 'user', content: 'test' }],
       });
@@ -57,19 +58,19 @@ export class AnthropicProvider implements LLMProvider {
     switch (mode) {
       case 'quality':
         return {
-          model: 'claude-sonnet-4-6-20250514',
+          model: getModelFor('anthropic', 'quality'),
           maxTokens: 1800,
           temperature: 0.8,
         };
       case 'balanced':
         return {
-          model: 'claude-sonnet-4-6-20250514',
+          model: getModelFor('anthropic', 'balanced'),
           maxTokens: 1300,
           temperature: 0.7,
         };
       default:
         return {
-          model: 'claude-sonnet-4-6-20250514',
+          model: getModelFor('anthropic', 'fast'),
           maxTokens: 900,
           temperature: 0.5,
         };

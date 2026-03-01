@@ -1,7 +1,13 @@
 import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, Key, Check, AlertCircle } from 'lucide-react';
-import { saveProviderConfig, deleteProviderConfig, getApiKey, getSpeedMode } from '@/lib/security/key-manager';
+import {
+  saveProviderConfig,
+  deleteProviderConfig,
+  getApiKey,
+  getProvider,
+  getSpeedMode,
+} from '@/lib/security/key-manager';
 import { createProvider } from '@/lib/providers/provider-factory';
 import type { ProviderConfig } from '@/types';
 
@@ -12,7 +18,7 @@ interface ApiKeyModalProps {
 
 export function ApiKeyModal({ open, onOpenChange }: ApiKeyModalProps) {
   const [apiKey, setApiKey] = useState('');
-  const [provider, setProvider] = useState<'anthropic' | 'openai' | 'gemini'>('anthropic');
+  const [provider, setProvider] = useState<'anthropic' | 'openai' | 'gemini'>(() => getProvider());
   const [rememberKey, setRememberKey] = useState(true);
   const [isValidating, setIsValidating] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);

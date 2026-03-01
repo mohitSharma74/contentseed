@@ -1,73 +1,39 @@
-# React + TypeScript + Vite
+# ContentSeed
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Client-side content repurposing app built with React + TypeScript + Vite.
 
-Currently, two official plugins are available:
+## Quick Start
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm install
+cp .env.example .env
+pnpm dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Open `http://localhost:5173`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Environment Variables
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+`ContentSeed` now uses `.env` / `.env.example` for provider selection, model switching, and local URLs.
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `VITE_APP_URL` | App base URL used by frontend config | `http://localhost:5173` |
+| `PLAYWRIGHT_BASE_URL` | Base URL for Playwright `use.baseURL` and `webServer.url` | `http://localhost:5173` |
+| `VITE_DEFAULT_PROVIDER` | Provider used when no browser-stored config exists (`anthropic`, `openai`, `gemini`) | `anthropic` |
+| `VITE_ANTHROPIC_MODEL_FAST` | Anthropic model for fast mode | `claude-sonnet-4-6-20250514` |
+| `VITE_ANTHROPIC_MODEL_BALANCED` | Anthropic model for balanced mode | `claude-sonnet-4-6-20250514` |
+| `VITE_ANTHROPIC_MODEL_QUALITY` | Anthropic model for quality mode | `claude-sonnet-4-6-20250514` |
+| `VITE_OPENAI_MODEL_FAST` | OpenAI model for fast mode | `gpt-5` |
+| `VITE_OPENAI_MODEL_BALANCED` | OpenAI model for balanced mode | `gpt-5` |
+| `VITE_OPENAI_MODEL_QUALITY` | OpenAI model for quality mode | `gpt-5` |
+| `VITE_GEMINI_MODEL_FAST` | Gemini model for fast mode | `gemini-2.5-pro` |
+| `VITE_GEMINI_MODEL_BALANCED` | Gemini model for balanced mode | `gemini-2.5-pro` |
+| `VITE_GEMINI_MODEL_QUALITY` | Gemini model for quality mode | `gemini-2.5-pro` |
+| `VITE_ANTHROPIC_API_KEY` | Optional Anthropic key fallback when no stored key exists | empty |
+| `VITE_OPENAI_API_KEY` | Optional OpenAI key fallback when no stored key exists | empty |
+| `VITE_GEMINI_API_KEY` | Optional Gemini key fallback when no stored key exists | empty |
+
+## API Key Security Note
+
+`VITE_*` variables are exposed to client bundles by Vite. Use these fallback key vars for local/dev convenience only, not for production secrets.

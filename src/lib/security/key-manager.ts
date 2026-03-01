@@ -1,5 +1,6 @@
 import { encryptApiKey, decryptApiKey } from './key-encryption';
 import type { ProviderConfig, SpeedMode } from '@/types';
+import { getDefaultProvider } from '@/lib/config/env';
 
 const STORAGE_KEY = 'contentseed-provider-config';
 const SPEED_MODE_KEY = 'contentseed-speed-mode';
@@ -84,7 +85,7 @@ export function getApiKey(): string | null {
 
 export function getProvider(): 'anthropic' | 'openai' | 'gemini' {
   const config = loadProviderConfig();
-  return config?.provider ?? 'anthropic';
+  return config?.provider ?? getDefaultProvider();
 }
 
 export function getSpeedMode(): SpeedMode {

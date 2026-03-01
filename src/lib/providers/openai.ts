@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import type { LLMProvider, PlatformOutput, GenerationOptions, StreamChunkHandler } from './types';
 import { buildPrompt } from '@/lib/prompts/platform-prompts';
+import { getModelFor } from '@/lib/config/env';
 
 interface OpenAIModelConfig {
   model: string;
@@ -103,19 +104,19 @@ export class OpenAIProvider implements LLMProvider {
     switch (mode) {
       case 'quality':
         return {
-          model: 'gpt-5',
+          model: getModelFor('openai', 'quality'),
           maxTokens: 1700,
           temperature: 0.8,
         };
       case 'balanced':
         return {
-          model: 'gpt-5',
+          model: getModelFor('openai', 'balanced'),
           maxTokens: 1200,
           temperature: 0.7,
         };
       default:
         return {
-          model: 'gpt-5',
+          model: getModelFor('openai', 'fast'),
           maxTokens: 800,
           temperature: 0.5,
         };
