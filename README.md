@@ -41,8 +41,8 @@ It helps turn one technical post into platform-specific drafts for X/Twitter, Li
   - Click `Try Demo` on landing, or
   - Click `Try Sample Post` in the app
   - This loads sample content and demo outputs without calling any LLM API.
-- Live demo:
-  - `contentseed.vercel.app` is documented in project context as coming soon.
+- YouTube demo:
+  - https://youtu.be/g5sFvgP0W1M
 
 ## How It Works
 
