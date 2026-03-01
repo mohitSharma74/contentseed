@@ -581,6 +581,38 @@ User clicks "Export"
 
 ---
 
+## 📋 Manual Tasks (Non-Automated)
+
+The following tasks require manual handling and cannot be automated:
+
+### Assets & Media
+
+| Task | Description |
+|------|-------------|
+| Create `og-image.png` | Social card image for link previews (1200x630px recommended) |
+| Create `public/logo.svg` | Ensure logo exists at correct path |
+| Record demo GIF/video | Screen recording demonstrating the tool in action |
+
+### Milestone 7: DEV Submission
+
+| Task | Description |
+|------|-------------|
+| Write DEV submission post | Compose the final blog post using the challenge template |
+| Add screenshots | Capture and add UI screenshots to the DEV post |
+| Add demo GIF | Insert the recorded demo GIF into the post |
+| Proofread & publish | Final review before submitting to DEV |
+
+### Post-Launch
+
+| Task | Description |
+|------|-------------|
+| Update GitHub repo URL | Replace `YOUR_USERNAME` placeholder with actual GitHub username |
+| Update author name | Replace `YOUR_NAME` in the footer with your name |
+| Update live demo URL | Replace placeholder `contentseed.vercel.app` with actual deployment URL |
+| Verify deployment | Confirm the Vercel deployment works correctly |
+
+---
+
 ## 🔮 Future Vision (Post-Challenge)
 
 ContentSeed has legs beyond a weekend project. Here's the long-term vision:

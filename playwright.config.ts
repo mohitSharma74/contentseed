@@ -1,4 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
+import { loadEnv } from 'vite';
+
+const env = loadEnv(process.env.NODE_ENV ?? 'test', process.cwd(), '');
+const baseURL =
+  env.PLAYWRIGHT_BASE_URL?.trim() || env.VITE_APP_URL?.trim() || 'http://localhost:5173';
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -9,7 +14,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL,
     trace: 'on-first-retry',
   },
   projects: [
@@ -20,7 +25,7 @@ export default defineConfig({
   ],
   webServer: {
     command: 'pnpm dev',
-    url: 'http://localhost:5173',
+    url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
   },
