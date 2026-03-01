@@ -1,6 +1,12 @@
 import OpenAI from 'openai';
-import type { LLMProvider, PlatformOutput, GenerationOptions } from './types';
+import type { LLMProvider, PlatformOutput, GenerationOptions, StreamChunkHandler } from './types';
 import { buildPrompt } from '@/lib/prompts/platform-prompts';
+
+interface OpenAIModelConfig {
+  model: string;
+  maxTokens: number;
+  temperature: number;
+}
 
 export class OpenAIProvider implements LLMProvider {
   private client: OpenAI;
@@ -27,10 +33,11 @@ export class OpenAIProvider implements LLMProvider {
 
   async generate(prompt: string, options: GenerationOptions): Promise<PlatformOutput> {
     const fullPrompt = buildPrompt(prompt, options.platform);
-    const systemPrompt = this.getSystemPrompt(options.platform);
+    const systemPrompt = this.getSystemPrompt();
+    const config = this.getModelConfig(options.speedMode);
 
     const response = await this.client.chat.completions.create({
-      model: 'gpt-5',
+      model: config.model,
       messages: [
         {
           role: 'system',
@@ -42,85 +49,83 @@ export class OpenAIProvider implements LLMProvider {
         },
       ],
       response_format: { type: 'json_object' },
+      max_completion_tokens: config.maxTokens,
+      temperature: config.temperature,
     });
 
     const text = response.choices[0]?.message?.content || '';
     return this.parseResponse(text, options.platform);
   }
 
-  private getSystemPrompt(platform: string): string {
-    const prompts: Record<string, string> = {
-      twitter: `You are an expert Twitter content creator. Your task is to transform blog posts into engaging Twitter/X threads.
+  async generateStream(
+    prompt: string,
+    options: GenerationOptions,
+    onChunk: StreamChunkHandler
+  ): Promise<PlatformOutput> {
+    const fullPrompt = buildPrompt(prompt, options.platform);
+    const systemPrompt = this.getSystemPrompt();
+    const config = this.getModelConfig(options.speedMode);
 
-Key rules you MUST follow:
-- Each tweet is MAXIMUM 280 characters
-- Hook first - the first tweet must grab attention immediately
-- Thread format: "1/" through "5/" numbering
-- NO links in tweets 1-4, ONLY in the final tweet (tweet 5)
-- Hashtags ONLY on the final tweet (max 3)
-- No emojis in the thread body, only in the final tweet if appropriate
-- Make it feel native to Twitter, not a truncated blog post
+    const stream = await this.client.chat.completions.create({
+      model: config.model,
+      stream: true,
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt,
+        },
+        {
+          role: 'user',
+          content: fullPrompt,
+        },
+      ],
+      response_format: { type: 'json_object' },
+      max_completion_tokens: config.maxTokens,
+      temperature: config.temperature,
+    });
 
-Return JSON format:
-{
-  "content": "1/ Your hook here...\n\n2/ Key insight...",
-  "hashtags": ["#topic1", "#topic2"],
-  "hook": "Alternative hook for A/B testing"
-}`,
-      linkedin: `You are an expert LinkedIn content creator. Your task is to transform blog posts into professional LinkedIn posts.
+    let buffer = '';
+    for await (const chunk of stream) {
+      const delta = chunk.choices[0]?.delta?.content ?? '';
+      if (!delta) continue;
 
-Key rules you MUST follow:
-- "Broetry" format: Single line that flows naturally (no line breaks mid-thought)
-- The first line must be a "fold line" - under 140 characters to show fully in preview
-- Add 1-2 engaging questions at the end to drive comments
-- 3-5 relevant hashtags at the bottom
-- Professional but personal tone
-- No emoji overload - 1-2 max if at all
-- Add subtle line breaks between paragraphs for readability
+      buffer += delta;
+      const partialContent = extractContentFromPartialJson(buffer);
+      if (partialContent) {
+        onChunk(partialContent);
+      }
+    }
 
-Return JSON format:
-{
-  "content": "Your LinkedIn post content...",
-  "hashtags": ["#topic1", "#topic2", "#topic3"],
-  "hook": "Alternative hook"
-}`,
-      reddit: `You are an expert Reddit content creator. Your task is to transform blog posts into valuable Reddit posts.
+    return this.parseResponse(buffer, options.platform);
+  }
 
-Key rules you MUST follow:
-- VALUE FIRST - give away the key insights, don't just drop a link
-- Start with a compelling TL;DR summary (Reddit style: "TL;DR: ...")
-- Use Reddit markdown formatting (**, ##, > for quotes)
-- Be authentic and helpful, not promotional
-- Match the subreddit tone (usually casual, knowledgeable)
-- Don't be overly salesy - Redditors hate self-promotion
-- Include questions to spark discussion
+  private getModelConfig(mode: GenerationOptions['speedMode']): OpenAIModelConfig {
+    switch (mode) {
+      case 'quality':
+        return {
+          model: 'gpt-5',
+          maxTokens: 1700,
+          temperature: 0.8,
+        };
+      case 'balanced':
+        return {
+          model: 'gpt-5',
+          maxTokens: 1200,
+          temperature: 0.7,
+        };
+      default:
+        return {
+          model: 'gpt-5',
+          maxTokens: 800,
+          temperature: 0.5,
+        };
+    }
+  }
 
-Return JSON format:
-{
-  "content": "Your Reddit post with markdown...",
-  "hashtags": [],
-  "hook": "Alternative title/hook"
-}`,
-      substack: `You are an expert Substack Notes creator. Your task is to transform blog posts into compelling Substack Notes.
-
-Key rules you MUST follow:
-- Sweet spot: 400-550 characters
-- NO hashtags - Substack Notes doesn't use them
-- Create information gaps - tease without giving everything away
-- Authentic voice over polished corporate tone
-- Be conversational, like you're texting a friend about something cool you learned
-- If mentioning the full post, make it feel like a preview, not a link dump
-- 1-2 emojis max, only if they add meaning
-
-Return JSON format:
-{
-  "content": "Your Substack Note...",
-  "hashtags": [],
-  "hook": "Alternative opening"
-}`,
-    };
-
-    return prompts[platform] || prompts.twitter;
+  private getSystemPrompt(): string {
+    return `You are a platform-native social writer.
+Always return valid JSON with keys: content (string), hashtags (string[]), hook (string).
+Do not include extra keys, markdown fences, or explanations outside JSON.`;
   }
 
   private parseResponse(text: string, platform: string): PlatformOutput {
@@ -140,4 +145,56 @@ Return JSON format:
       };
     }
   }
+}
+
+function extractContentFromPartialJson(raw: string): string | null {
+  const markerMatch = raw.match(/"content"\s*:\s*"/);
+  if (!markerMatch || markerMatch.index === undefined) {
+    return null;
+  }
+
+  const start = markerMatch.index + markerMatch[0].length;
+  let content = '';
+  let escaped = false;
+
+  for (let i = start; i < raw.length; i += 1) {
+    const char = raw[i];
+
+    if (escaped) {
+      switch (char) {
+        case 'n':
+          content += '\n';
+          break;
+        case 't':
+          content += '\t';
+          break;
+        case 'r':
+          content += '\r';
+          break;
+        case '\\':
+          content += '\\';
+          break;
+        case '"':
+          content += '"';
+          break;
+        default:
+          content += char;
+      }
+      escaped = false;
+      continue;
+    }
+
+    if (char === '\\') {
+      escaped = true;
+      continue;
+    }
+
+    if (char === '"') {
+      return content;
+    }
+
+    content += char;
+  }
+
+  return content || null;
 }

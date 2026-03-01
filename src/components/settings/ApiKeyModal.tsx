@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, Key, Check, AlertCircle } from 'lucide-react';
-import { saveProviderConfig, deleteProviderConfig, getApiKey } from '@/lib/security/key-manager';
+import { saveProviderConfig, deleteProviderConfig, getApiKey, getSpeedMode } from '@/lib/security/key-manager';
 import { createProvider } from '@/lib/providers/provider-factory';
 import type { ProviderConfig } from '@/types';
 
@@ -40,6 +40,7 @@ export function ApiKeyModal({ open, onOpenChange }: ApiKeyModalProps) {
         provider,
         apiKey,
         rememberKey,
+        speedMode: getSpeedMode(),
       };
 
       saveProviderConfig(config);

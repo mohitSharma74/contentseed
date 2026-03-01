@@ -1,4 +1,6 @@
 export type Platform = 'twitter' | 'linkedin' | 'reddit' | 'substack';
+export type SpeedMode = 'fast' | 'balanced' | 'quality';
+export type PlatformGenerationStatus = 'idle' | 'queued' | 'generating' | 'done' | 'error';
 
 export interface ParsedContent {
   title: string;
@@ -21,6 +23,7 @@ export interface PlatformOutput {
 
 export interface GenerationOptions {
   platform: Platform;
+  speedMode?: SpeedMode;
   tone?: 'casual' | 'professional' | 'technical' | 'storytelling';
   length?: 'shorter' | 'default' | 'longer';
   includeHashtags?: boolean;
@@ -31,6 +34,7 @@ export interface ProviderConfig {
   provider: 'anthropic' | 'openai' | 'gemini';
   apiKey: string;
   rememberKey: boolean;
+  speedMode?: SpeedMode;
 }
 
 export interface GenerationResult {

@@ -1,6 +1,6 @@
 import { Twitter, Linkedin, MessageCircle, Mail, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { Platform, PlatformOutput } from '@/types';
+import type { Platform, PlatformOutput, PlatformGenerationStatus } from '@/types';
 import { TwitterPreview, LinkedInPreview, RedditPreview, SubstackPreview } from './previews';
 import { ActionButtons } from './ActionButtons';
 
@@ -14,6 +14,7 @@ interface PlatformTabsProps {
   onExport?: (platform: Platform) => void;
   onExportAll?: () => void;
   hasOutputs?: boolean;
+  platformStatus?: Record<Platform, PlatformGenerationStatus>;
 }
 
 const platforms: { id: Platform; label: string; icon: typeof Twitter }[] = [
@@ -37,6 +38,14 @@ const platformPreviews = {
   substack: SubstackPreview,
 };
 
+const statusColor: Record<PlatformGenerationStatus, string> = {
+  idle: 'bg-gray-500',
+  queued: 'bg-amber-500',
+  generating: 'bg-blue-500',
+  done: 'bg-green-500',
+  error: 'bg-red-500',
+};
+
 export function PlatformTabs({
   activePlatform,
   onPlatformChange,
@@ -47,8 +56,10 @@ export function PlatformTabs({
   onExport,
   onExportAll,
   hasOutputs,
+  platformStatus,
 }: PlatformTabsProps) {
   const PreviewComponent = output ? platformPreviews[activePlatform] : null;
+  const currentStatus = platformStatus?.[activePlatform] ?? 'idle';
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -62,6 +73,12 @@ export function PlatformTabs({
           <p className="text-sm text-[var(--muted-foreground)]">
             Generate content to see output
           </p>
+        )}
+        {!isDemoMode && platformStatus && (
+          <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
+            <span className={cn('w-2 h-2 rounded-full', statusColor[currentStatus])} />
+            <span className="capitalize">{currentStatus}</span>
+          </div>
         )}
         {hasOutputs && onExportAll && (
           <button
@@ -93,6 +110,14 @@ export function PlatformTabs({
               style={{ color: activePlatform === platform.id ? platformColors[platform.id] : undefined }}
             />
             <span className="hidden sm:inline">{platform.label}</span>
+            {platformStatus && (
+              <span
+                className={cn(
+                  'ml-1 inline-block h-2 w-2 rounded-full',
+                  statusColor[platformStatus[platform.id]]
+                )}
+              />
+            )}
           </button>
         ))}
       </div>

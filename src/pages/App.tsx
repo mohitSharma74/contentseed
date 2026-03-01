@@ -5,12 +5,11 @@ import { PlatformSelector } from '@/components/input/PlatformSelector';
 import { PlatformTabs } from '@/components/output/PlatformTabs';
 import { ToastContainer } from '@/components/ui/ToastContainer';
 import { ExportPreviewModal } from '@/components/export/ExportPreviewModal';
-import { useMarkdownParser } from '@/hooks/useMarkdownParser';
 import { useContentGeneration } from '@/hooks/useContentGeneration';
 import samplePost from '@/lib/demo/sample-post.md?raw';
 import sampleOutputs from '@/lib/demo/sample-outputs.json';
 import type { Platform, PlatformOutput } from '@/types';
-import { getApiKey } from '@/lib/security/key-manager';
+import { getApiKey, getSpeedMode } from '@/lib/security/key-manager';
 import { ApiKeyModal } from '@/components/settings/ApiKeyModal';
 
 export function App() {
@@ -21,8 +20,17 @@ export function App() {
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportPlatform, setExportPlatform] = useState<Platform | null>(null);
   const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>(['twitter', 'linkedin', 'reddit', 'substack']);
-  const { parse, isParsing: isParsingMarkdown } = useMarkdownParser();
-  const { generateForPlatforms, regenerate, isGenerating, outputs, error, clearOutputs, setDemoOutputs } = useContentGeneration();
+  const {
+    generateForPlatforms,
+    regenerate,
+    isGenerating,
+    outputs,
+    error,
+    platformStatus,
+    timings,
+    clearOutputs,
+    setDemoOutputs,
+  } = useContentGeneration();
 
   useEffect(() => {
     const handleLoadSample = () => {
@@ -76,8 +84,12 @@ export function App() {
       return;
     }
     
-    await parse(markdown);
-    await generateForPlatforms(markdown, selectedPlatforms);
+    await generateForPlatforms(
+      markdown,
+      selectedPlatforms,
+      { speedMode: getSpeedMode() },
+      activePlatform
+    );
   };
 
   const handleDemoMode = () => {
@@ -101,6 +113,13 @@ export function App() {
   };
 
   const hasOutputs = Object.values(outputs).some((o) => o !== null);
+  const firstResultReady = Boolean(timings.firstResultAt);
+  const firstResultMs = timings.firstResultAt && timings.startedAt
+    ? timings.firstResultAt - timings.startedAt
+    : null;
+  const totalMs = timings.completedAt && timings.startedAt
+    ? timings.completedAt - timings.startedAt
+    : null;
 
   return (
     <div className="min-h-screen bg-[var(--background)] flex flex-col">
@@ -126,16 +145,31 @@ export function App() {
               <PlatformSelector
                 selectedPlatforms={selectedPlatforms}
                 onChange={setSelectedPlatforms}
+                statuses={platformStatus}
               />
               <button
                 type="button"
                 onClick={handleGenerate}
-                disabled={!markdown.trim() || selectedPlatforms.length === 0 || isGenerating || isParsingMarkdown}
+                disabled={!markdown.trim() || selectedPlatforms.length === 0 || isGenerating}
                 className="flex-1 py-3 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isGenerating ? 'Generating...' : 'Generate'}
               </button>
             </div>
+            {timings.startedAt && (
+              <p className="text-xs text-[var(--muted-foreground)] text-center">
+                {isGenerating && !firstResultReady && 'Working on first platform...'}
+                {firstResultReady && firstResultMs !== null && `First result in ${(firstResultMs / 1000).toFixed(2)}s`}
+                {!isGenerating && totalMs !== null && ` • Total ${(totalMs / 1000).toFixed(2)}s`}
+              </p>
+            )}
+            {import.meta.env.DEV && timings.startedAt && (
+              <div className="text-xs text-[var(--muted-foreground)] bg-[var(--muted)]/40 rounded-md p-2">
+                <p>Started: {new Date(timings.startedAt).toLocaleTimeString()}</p>
+                <p>First result: {timings.firstResultAt ? `${timings.firstResultAt - timings.startedAt}ms` : 'pending'}</p>
+                <p>Completed: {timings.completedAt ? `${timings.completedAt - timings.startedAt}ms` : 'pending'}</p>
+              </div>
+            )}
           </div>
         </div>
         
@@ -150,6 +184,7 @@ export function App() {
             onExport={handleExport}
             onExportAll={handleExportAll}
             hasOutputs={hasOutputs}
+            platformStatus={platformStatus}
           />
         </div>
       </main>

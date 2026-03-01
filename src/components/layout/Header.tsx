@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ThemeToggle } from './ThemeToggle';
 import { PrivacyIndicator } from './PrivacyIndicator';
 import { ProviderToggle } from '../settings/ProviderToggle';
+import { SpeedModeToggle } from '../settings/SpeedModeToggle';
 import { Github } from 'lucide-react';
 
 export function Header() {
@@ -17,6 +18,7 @@ export function Header() {
       
       <div className="flex items-center gap-3">
         <ProviderToggle />
+        <SpeedModeToggle />
         <a
           href="https://github.com"
           target="_blank"

@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Check, ChevronDown, Twitter, Linkedin, MessageCircle, Mail } from 'lucide-react';
-import type { Platform } from '@/types';
+import type { Platform, PlatformGenerationStatus } from '@/types';
 import { cn } from '@/lib/utils';
 
 interface PlatformSelectorProps {
   selectedPlatforms: Platform[];
   onChange: (platforms: Platform[]) => void;
+  statuses?: Record<Platform, PlatformGenerationStatus>;
 }
 
 const PLATFORMS: { id: Platform; label: string; icon: typeof Twitter }[] = [
@@ -23,8 +24,27 @@ const PLATFORM_COLORS: Record<Platform, string> = {
   substack: '#FF6719',
 };
 
-export function PlatformSelector({ selectedPlatforms, onChange }: PlatformSelectorProps) {
+const STATUS_LABEL: Record<PlatformGenerationStatus, string> = {
+  idle: 'Idle',
+  queued: 'Queued',
+  generating: 'Generating',
+  done: 'Done',
+  error: 'Error',
+};
+
+const STATUS_COLOR: Record<PlatformGenerationStatus, string> = {
+  idle: 'text-[var(--muted-foreground)]',
+  queued: 'text-amber-400',
+  generating: 'text-blue-400',
+  done: 'text-green-400',
+  error: 'text-red-400',
+};
+
+export function PlatformSelector({ selectedPlatforms, onChange, statuses }: PlatformSelectorProps) {
   const [open, setOpen] = useState(false);
+  const generatingCount = selectedPlatforms.filter(
+    platform => statuses?.[platform] === 'queued' || statuses?.[platform] === 'generating'
+  ).length;
 
   const togglePlatform = (platform: Platform) => {
     if (selectedPlatforms.includes(platform)) {
@@ -60,6 +80,9 @@ export function PlatformSelector({ selectedPlatforms, onChange }: PlatformSelect
               ? 'All platforms'
               : `${selectedPlatforms.length} platform${selectedPlatforms.length > 1 ? 's' : ''}`}
           </span>
+          {generatingCount > 0 && (
+            <span className="text-xs text-blue-400">{generatingCount} running</span>
+          )}
           <ChevronDown className="h-4 w-4" />
         </button>
       </DropdownMenu.Trigger>
@@ -97,6 +120,11 @@ export function PlatformSelector({ selectedPlatforms, onChange }: PlatformSelect
                   style={{ color: PLATFORM_COLORS[platform.id] }}
                 />
                 <span className="flex-1 text-left">{platform.label}</span>
+                {statuses && (
+                  <span className={cn('text-[10px] uppercase tracking-wide', STATUS_COLOR[statuses[platform.id]])}>
+                    {STATUS_LABEL[statuses[platform.id]]}
+                  </span>
+                )}
               </button>
             ))}
           </div>
