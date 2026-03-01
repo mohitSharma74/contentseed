@@ -97,7 +97,7 @@ export function useContentGeneration() {
       const providerType = getProvider();
       const apiKey = getApiKey() ?? getProviderApiKeyFallback(providerType);
       if (!apiKey) {
-        setState(prev => ({ ...prev, error: 'No API key configured' }));
+        setState(prev => ({ ...prev, error: 'No API key configured. Add a valid key in settings to continue.' }));
         return;
       }
 
@@ -133,7 +133,7 @@ export function useContentGeneration() {
 
       try {
         const content = await extractContent(markdown);
-        const failedPlatforms: Platform[] = [];
+        const failedPlatforms: Array<{ platform: Platform; message: string }> = [];
 
         const runForPlatform = async (platform: Platform) => {
           setState(prev => ({
@@ -182,7 +182,10 @@ export function useContentGeneration() {
             }));
           } catch (err) {
             console.error(`Error generating ${platform}:`, err);
-            failedPlatforms.push(platform);
+            failedPlatforms.push({
+              platform,
+              message: mapGenerationError(err, 'generate'),
+            });
 
             if (generationRunRef.current !== runId) return;
             setState(prev => ({
@@ -205,7 +208,7 @@ export function useContentGeneration() {
         setState(prev => ({
           ...prev,
           isGenerating: false,
-          error: failedPlatforms.length > 0 ? `Failed: ${failedPlatforms.join(', ')}` : null,
+          error: failedPlatforms.length > 0 ? buildBatchFailureMessage(failedPlatforms) : null,
           timings: {
             ...prev.timings,
             completedAt: Date.now(),
@@ -217,7 +220,7 @@ export function useContentGeneration() {
           ...prev,
           isGenerating: false,
           platformStatus: { ...DEFAULT_STATUS },
-          error: err instanceof Error ? err.message : 'Generation failed',
+          error: mapGenerationError(err, 'generate'),
           timings: {
             ...prev.timings,
             completedAt: Date.now(),
@@ -229,13 +232,13 @@ export function useContentGeneration() {
   );
 
   const regenerate = useCallback(
-    async (platform: Platform, options: Partial<GenerationOptions> = {}) => {
+    async (platform: Platform, markdown: string, options: Partial<GenerationOptions> = {}) => {
       const providerType = getProvider();
       const apiKey = getApiKey() ?? getProviderApiKeyFallback(providerType);
       if (!apiKey) {
         setState(prev => ({
           ...prev,
-          error: 'No API key configured',
+          error: 'No API key configured. Add a valid key in settings to continue.',
         }));
         return;
       }
@@ -256,26 +259,32 @@ export function useContentGeneration() {
       }));
 
       try {
-        const savedOutput = state.outputs[platform];
-        if (!savedOutput) {
-          throw new Error('No existing output to regenerate');
-        }
-
         const provider = createProvider(providerType, apiKey);
+        let newOutput: PlatformOutput | null = null;
 
-        const generationOptions: GenerationOptions = {
-          platform,
-          speedMode: options.speedMode ?? getSpeedMode(),
-          tone: options.tone,
-          length: options.length,
-          includeHashtags: options.includeHashtags ?? true,
-          includeEmojis: options.includeEmojis ?? false,
-        };
+        if (markdown.trim()) {
+          const parsedContent = await extractContent(markdown);
+          newOutput = await generateForPlatform(provider, parsedContent, platform, options);
+        } else {
+          const savedOutput = state.outputs[platform];
+          if (!savedOutput) {
+            throw new Error('No existing output to regenerate');
+          }
 
-        const newOutput = await provider.generate(
-          `Regenerate this ${platform} content with improved quality:\n\n${savedOutput.content}`,
-          generationOptions
-        );
+          const generationOptions: GenerationOptions = {
+            platform,
+            speedMode: options.speedMode ?? getSpeedMode(),
+            tone: options.tone,
+            length: options.length,
+            includeHashtags: options.includeHashtags ?? true,
+            includeEmojis: options.includeEmojis ?? false,
+          };
+
+          newOutput = await provider.generate(
+            `Regenerate this ${platform} content with improved quality:\n\n${savedOutput.content}`,
+            generationOptions
+          );
+        }
 
         setState(prev => ({
           ...prev,
@@ -302,7 +311,7 @@ export function useContentGeneration() {
             ...prev.platformStatus,
             [platform]: 'error',
           },
-          error: err instanceof Error ? err.message : 'Regeneration failed',
+          error: mapGenerationError(err, 'regenerate'),
           timings: {
             ...prev.timings,
             completedAt: Date.now(),
@@ -310,7 +319,7 @@ export function useContentGeneration() {
         }));
       }
     },
-    [state.outputs]
+    [generateForPlatform, state.outputs]
   );
 
   const clearOutputs = useCallback(() => {
@@ -421,4 +430,81 @@ function delay(ms: number): Promise<void> {
   return new Promise(resolve => {
     setTimeout(resolve, ms);
   });
+}
+
+type GenerationAction = 'generate' | 'regenerate';
+
+function mapGenerationError(error: unknown, action: GenerationAction): string {
+  const fallback = action === 'regenerate' ? 'Regeneration failed. Please try again.' : 'Generation failed. Please try again.';
+  const raw = extractErrorText(error);
+  const message = raw.toLowerCase();
+
+  if (
+    message.includes('invalid api key') ||
+    message.includes('incorrect api key') ||
+    message.includes('authentication') ||
+    message.includes('unauthorized') ||
+    message.includes('401')
+  ) {
+    return 'Invalid API key. Update your key in settings and try again.';
+  }
+
+  if (
+    message.includes('rate limit') ||
+    message.includes('too many requests') ||
+    message.includes('429') ||
+    message.includes('quota')
+  ) {
+    return 'Rate limit reached. Wait a moment and retry, or switch provider/speed mode.';
+  }
+
+  if (message.includes('network') || message.includes('fetch')) {
+    return 'Network error while contacting the provider. Check your connection and try again.';
+  }
+
+  return raw || fallback;
+}
+
+function buildBatchFailureMessage(failures: Array<{ platform: Platform; message: string }>): string {
+  if (failures.length === 0) return '';
+
+  if (failures.length === 1) {
+    return `${failures[0].platform} failed: ${failures[0].message}`;
+  }
+
+  const invalidKeyFailures = failures.every(item => item.message.toLowerCase().includes('invalid api key'));
+  if (invalidKeyFailures) {
+    return 'Generation failed for all selected platforms: invalid API key.';
+  }
+
+  const rateLimitFailures = failures.every(item => item.message.toLowerCase().includes('rate limit'));
+  if (rateLimitFailures) {
+    return 'Rate limit reached for all selected platforms. Retry shortly.';
+  }
+
+  return `Failed platforms: ${failures.map(item => item.platform).join(', ')}`;
+}
+
+function extractErrorText(error: unknown): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (typeof error === 'object' && error !== null) {
+    const candidate = error as {
+      message?: string;
+      error?: { message?: string };
+      status?: number;
+    };
+
+    if (candidate.message) return candidate.message;
+    if (candidate.error?.message) return candidate.error.message;
+    if (typeof candidate.status === 'number') return `Request failed with status ${candidate.status}`;
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  return 'Unknown provider error';
 }

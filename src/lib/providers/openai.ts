@@ -33,7 +33,7 @@ export class OpenAIProvider implements LLMProvider {
   }
 
   async generate(prompt: string, options: GenerationOptions): Promise<PlatformOutput> {
-    const fullPrompt = buildPrompt(prompt, options.platform);
+    const fullPrompt = buildPrompt(prompt, options.platform, options);
     const systemPrompt = this.getSystemPrompt();
     const config = this.getModelConfig(options.speedMode);
 
@@ -63,7 +63,7 @@ export class OpenAIProvider implements LLMProvider {
     options: GenerationOptions,
     onChunk: StreamChunkHandler
   ): Promise<PlatformOutput> {
-    const fullPrompt = buildPrompt(prompt, options.platform);
+    const fullPrompt = buildPrompt(prompt, options.platform, options);
     const systemPrompt = this.getSystemPrompt();
     const config = this.getModelConfig(options.speedMode);
 

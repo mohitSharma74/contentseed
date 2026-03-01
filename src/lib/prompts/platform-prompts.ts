@@ -1,24 +1,34 @@
-import type { Platform } from '@/types';
+import type { GenerationOptions, Platform } from '@/types';
 import { getTwitterPrompt } from './twitter';
 import { getLinkedInPrompt } from './linkedin';
 import { getRedditPrompt } from './reddit';
 import { getSubstackPrompt } from './substack';
 
-export function buildPrompt(content: string, platform: Platform): string {
+type PromptEditOptions = Pick<GenerationOptions, 'tone' | 'length' | 'includeHashtags' | 'includeEmojis'>;
+
+export function buildPrompt(content: string, platform: Platform, options: PromptEditOptions = {}): string {
   const parsedContent = parseContentString(content);
+  let basePrompt = '';
   
   switch (platform) {
     case 'twitter':
-      return getTwitterPrompt(parsedContent);
+      basePrompt = getTwitterPrompt(parsedContent);
+      break;
     case 'linkedin':
-      return getLinkedInPrompt(parsedContent);
+      basePrompt = getLinkedInPrompt(parsedContent);
+      break;
     case 'reddit':
-      return getRedditPrompt(parsedContent);
+      basePrompt = getRedditPrompt(parsedContent);
+      break;
     case 'substack':
-      return getSubstackPrompt(parsedContent);
+      basePrompt = getSubstackPrompt(parsedContent);
+      break;
     default:
-      return getTwitterPrompt(parsedContent);
+      basePrompt = getTwitterPrompt(parsedContent);
+      break;
   }
+
+  return `${basePrompt}\n\n${buildQuickEditInstruction(options)}`;
 }
 
 interface ContentData {
@@ -127,4 +137,33 @@ function extractStats(content: string): string[] {
 function extractTldr(content: string): string | undefined {
   const tldrMatch = content.match(/tl;dr:?\s*([^\n#]+)/i);
   return tldrMatch?.[1]?.trim();
+}
+
+function buildQuickEditInstruction(options: PromptEditOptions): string {
+  const tone = options.tone ?? 'professional';
+  const length = options.length ?? 'default';
+  const includeHashtags = options.includeHashtags ?? true;
+  const includeEmojis = options.includeEmojis ?? false;
+
+  return [
+    '## Quick Edit Overrides',
+    `- Tone: ${tone}`,
+    `- Length: ${length}`,
+    `- Include hashtags: ${includeHashtags ? 'yes' : 'no'}`,
+    `- Include emojis: ${includeEmojis ? 'yes' : 'no'}`,
+    '',
+    'Apply these overrides strictly:',
+    `1. Use a ${tone} voice.`,
+    length === 'shorter'
+      ? '2. Make output shorter than default while preserving clarity.'
+      : length === 'longer'
+        ? '2. Make output longer and richer than default while staying platform-native.'
+        : '2. Keep output at a standard length for the platform.',
+    includeHashtags
+      ? '3. Keep hashtags relevant and minimal.'
+      : '3. Do not include hashtags in content, and return an empty hashtags array.',
+    includeEmojis
+      ? '4. Emojis are allowed when they support readability.'
+      : '4. Do not include emojis.',
+  ].join('\n');
 }

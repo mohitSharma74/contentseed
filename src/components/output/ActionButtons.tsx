@@ -46,12 +46,12 @@ export function ActionButtons({
   };
 
   return (
-    <div className="flex items-center gap-2 p-3 border-t border-[var(--border)] bg-[var(--muted)]/30">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 p-3 border-t border-[var(--border)] bg-[var(--muted)]/30">
       <button
         type="button"
         onClick={handleCopyContent}
         className={cn(
-          'flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium',
+          'flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium',
           'bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 transition-opacity'
         )}
       >
@@ -65,7 +65,7 @@ export function ActionButtons({
           onClick={onRegenerate}
           disabled={isRegenerating}
           className={cn(
-            'flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium',
+            'flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium',
             'bg-[var(--muted)] text-[var(--foreground)] hover:bg-[var(--muted)]/80 transition-colors',
             'disabled:opacity-50 disabled:cursor-not-allowed'
           )}
@@ -79,7 +79,7 @@ export function ActionButtons({
         type="button"
         onClick={handleCopyAll}
         className={cn(
-          'flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium',
+          'flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium',
           'bg-[var(--muted)] text-[var(--foreground)] hover:bg-[var(--muted)]/80 transition-colors'
         )}
       >
@@ -92,7 +92,7 @@ export function ActionButtons({
           type="button"
           onClick={onExport}
           className={cn(
-            'flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium',
+            'flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium',
             'bg-[var(--secondary)] text-[var(--secondary-foreground)] hover:opacity-90 transition-opacity'
           )}
         >

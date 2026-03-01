@@ -3,13 +3,15 @@ import { Header } from '@/components/layout/Header';
 import { MarkdownEditor } from '@/components/input/MarkdownEditor';
 import { PlatformSelector } from '@/components/input/PlatformSelector';
 import { PlatformTabs } from '@/components/output/PlatformTabs';
+import { QuickEditBar } from '@/components/output/QuickEditBar';
 import { ToastContainer } from '@/components/ui/ToastContainer';
 import { ExportPreviewModal } from '@/components/export/ExportPreviewModal';
 import { useContentGeneration } from '@/hooks/useContentGeneration';
 import samplePost from '@/lib/demo/sample-post.md?raw';
 import sampleOutputs from '@/lib/demo/sample-outputs.json';
-import type { Platform, PlatformOutput } from '@/types';
-import { getApiKey, getSpeedMode } from '@/lib/security/key-manager';
+import type { Platform, PlatformOutput, QuickEditSettings } from '@/types';
+import { getApiKey, getProvider, getSpeedMode } from '@/lib/security/key-manager';
+import { getProviderApiKeyFallback } from '@/lib/config/env';
 import { ApiKeyModal } from '@/components/settings/ApiKeyModal';
 
 export function App() {
@@ -20,6 +22,12 @@ export function App() {
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportPlatform, setExportPlatform] = useState<Platform | null>(null);
   const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>(['twitter', 'linkedin', 'reddit', 'substack']);
+  const [quickEditSettings, setQuickEditSettings] = useState<QuickEditSettings>({
+    tone: 'professional',
+    length: 'default',
+    includeHashtags: true,
+    includeEmojis: false,
+  });
   const {
     generateForPlatforms,
     regenerate,
@@ -77,7 +85,8 @@ export function App() {
     if (!markdown.trim()) return;
     if (selectedPlatforms.length === 0) return;
     
-    const apiKey = getApiKey();
+    const provider = getProvider();
+    const apiKey = getApiKey() ?? getProviderApiKeyFallback(provider);
     
     if (!apiKey) {
       setShowApiKeyModal(true);
@@ -87,7 +96,13 @@ export function App() {
     await generateForPlatforms(
       markdown,
       selectedPlatforms,
-      { speedMode: getSpeedMode() },
+      {
+        speedMode: getSpeedMode(),
+        tone: quickEditSettings.tone,
+        length: quickEditSettings.length,
+        includeHashtags: quickEditSettings.includeHashtags,
+        includeEmojis: quickEditSettings.includeEmojis,
+      },
       activePlatform
     );
   };
@@ -98,8 +113,21 @@ export function App() {
     setSelectedPlatforms(['twitter', 'linkedin', 'reddit', 'substack']);
   };
 
-  const handleRegenerate = () => {
-    regenerate(activePlatform);
+  const handleRegenerate = async () => {
+    const provider = getProvider();
+    const apiKey = getApiKey() ?? getProviderApiKeyFallback(provider);
+    if (!apiKey) {
+      setShowApiKeyModal(true);
+      return;
+    }
+
+    await regenerate(activePlatform, markdown, {
+      speedMode: getSpeedMode(),
+      tone: quickEditSettings.tone,
+      length: quickEditSettings.length,
+      includeHashtags: quickEditSettings.includeHashtags,
+      includeEmojis: quickEditSettings.includeEmojis,
+    });
   };
 
   const handleExport = (platform?: Platform) => {
@@ -125,7 +153,7 @@ export function App() {
     <div className="min-h-screen bg-[var(--background)] flex flex-col">
       <Header />
       <main className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-        <div className="flex-1 flex flex-col border-r border-[var(--border)] min-h-0">
+        <div className="flex-1 flex flex-col border-b border-[var(--border)] lg:border-b-0 lg:border-r min-h-0">
           <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
             <h2 className="font-semibold">Input</h2>
             <button
@@ -141,7 +169,7 @@ export function App() {
             {error && (
               <p className="text-sm text-red-500 text-center">{error}</p>
             )}
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
               <PlatformSelector
                 selectedPlatforms={selectedPlatforms}
                 onChange={setSelectedPlatforms}
@@ -174,13 +202,20 @@ export function App() {
         </div>
         
         <div className="flex-1 flex flex-col min-h-0">
+          <QuickEditBar
+            settings={quickEditSettings}
+            onChange={setQuickEditSettings}
+            onApply={handleRegenerate}
+            isApplying={platformStatus[activePlatform] === 'generating'}
+            canApply={Boolean(outputs[activePlatform]) && !isGenerating}
+          />
           <PlatformTabs
             activePlatform={activePlatform}
             onPlatformChange={setActivePlatform}
             output={outputs[activePlatform]}
             isDemoMode={isDemoMode}
             onRegenerate={handleRegenerate}
-            isRegenerating={isGenerating}
+            isRegenerating={platformStatus[activePlatform] === 'generating'}
             onExport={handleExport}
             onExportAll={handleExportAll}
             hasOutputs={hasOutputs}

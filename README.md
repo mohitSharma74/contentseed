@@ -24,12 +24,12 @@ Open `http://localhost:5173`.
 | `VITE_ANTHROPIC_MODEL_FAST` | Anthropic model for fast mode | `claude-sonnet-4-6-20250514` |
 | `VITE_ANTHROPIC_MODEL_BALANCED` | Anthropic model for balanced mode | `claude-sonnet-4-6-20250514` |
 | `VITE_ANTHROPIC_MODEL_QUALITY` | Anthropic model for quality mode | `claude-sonnet-4-6-20250514` |
-| `VITE_OPENAI_MODEL_FAST` | OpenAI model for fast mode | `gpt-5` |
-| `VITE_OPENAI_MODEL_BALANCED` | OpenAI model for balanced mode | `gpt-5` |
-| `VITE_OPENAI_MODEL_QUALITY` | OpenAI model for quality mode | `gpt-5` |
-| `VITE_GEMINI_MODEL_FAST` | Gemini model for fast mode | `gemini-2.5-pro` |
-| `VITE_GEMINI_MODEL_BALANCED` | Gemini model for balanced mode | `gemini-2.5-pro` |
-| `VITE_GEMINI_MODEL_QUALITY` | Gemini model for quality mode | `gemini-2.5-pro` |
+| `VITE_OPENAI_MODEL_FAST` | OpenAI model for fast mode | `gpt-5.2` |
+| `VITE_OPENAI_MODEL_BALANCED` | OpenAI model for balanced mode | `gpt-5.2` |
+| `VITE_OPENAI_MODEL_QUALITY` | OpenAI model for quality mode | `gpt-5.2` |
+| `VITE_GEMINI_MODEL_FAST` | Gemini model for fast mode | `gemini-3.0-pro` |
+| `VITE_GEMINI_MODEL_BALANCED` | Gemini model for balanced mode | `gemini-3.0-pro` |
+| `VITE_GEMINI_MODEL_QUALITY` | Gemini model for quality mode | `gemini-3.0-pro` |
 | `VITE_ANTHROPIC_API_KEY` | Optional Anthropic key fallback when no stored key exists | empty |
 | `VITE_OPENAI_API_KEY` | Optional OpenAI key fallback when no stored key exists | empty |
 | `VITE_GEMINI_API_KEY` | Optional Gemini key fallback when no stored key exists | empty |

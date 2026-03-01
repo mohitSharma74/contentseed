@@ -1,6 +1,8 @@
 export type Platform = 'twitter' | 'linkedin' | 'reddit' | 'substack';
 export type SpeedMode = 'fast' | 'balanced' | 'quality';
 export type PlatformGenerationStatus = 'idle' | 'queued' | 'generating' | 'done' | 'error';
+export type GenerationTone = 'casual' | 'professional' | 'technical' | 'storytelling';
+export type GenerationLength = 'shorter' | 'default' | 'longer';
 
 export interface ParsedContent {
   title: string;
@@ -24,10 +26,17 @@ export interface PlatformOutput {
 export interface GenerationOptions {
   platform: Platform;
   speedMode?: SpeedMode;
-  tone?: 'casual' | 'professional' | 'technical' | 'storytelling';
-  length?: 'shorter' | 'default' | 'longer';
+  tone?: GenerationTone;
+  length?: GenerationLength;
   includeHashtags?: boolean;
   includeEmojis?: boolean;
+}
+
+export interface QuickEditSettings {
+  tone: GenerationTone;
+  length: GenerationLength;
+  includeHashtags: boolean;
+  includeEmojis: boolean;
 }
 
 export interface ProviderConfig {

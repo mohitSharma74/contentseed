@@ -28,7 +28,7 @@ export class GeminiProvider implements LLMProvider {
   }
 
   async generate(prompt: string, options: GenerationOptions): Promise<PlatformOutput> {
-    const fullPrompt = buildPrompt(prompt, options.platform);
+    const fullPrompt = buildPrompt(prompt, options.platform, options);
     const systemPrompt = this.getSystemPrompt();
     const config = this.getModelConfig(options.speedMode);
     
