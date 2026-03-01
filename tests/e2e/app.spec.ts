@@ -14,9 +14,9 @@ test.describe('App Page', () => {
     await expect(page.getByRole('button', { name: /Substack/ })).toBeVisible();
   });
 
-  test('should load sample post when clicking Load Sample Post', async ({ page }) => {
+  test('should load sample post when clicking Try Sample Post', async ({ page }) => {
     await page.goto('/app');
-    await page.getByRole('button', { name: 'Load Sample Post' }).click();
+    await page.getByRole('button', { name: 'Try Sample Post' }).click();
     const textarea = page.locator('textarea');
     await expect(textarea).not.toBeEmpty();
     const value = await textarea.inputValue();
@@ -37,21 +37,17 @@ test.describe('App Page', () => {
     await expect(page.getByText('Your data stays in your browser')).toBeVisible();
   });
 
-  test('should generate content and show output', async ({ page }) => {
+  test('should load demo output when clicking Try Sample Post', async ({ page }) => {
     await page.goto('/app');
-    await page.getByRole('button', { name: 'Load Sample Post' }).click();
-    await page.getByRole('button', { name: 'Generate for All Platforms' }).click();
-    await page.waitForTimeout(1000);
-    await expect(page.getByText('Generate for All Platforms')).toBeVisible();
+    await page.getByRole('button', { name: 'Try Sample Post' }).click();
+    await expect(page.getByText('Demo Mode — Pre-generated output')).toBeVisible();
+    await expect(page.getByText('Ever wondered how Google Docs handles simultaneous edits without conflicts?').first()).toBeVisible();
   });
 
   test('should switch between platform tabs', async ({ page }) => {
     await page.goto('/app');
-    await page.getByRole('button', { name: 'Load Sample Post' }).click();
-    await page.getByRole('button', { name: 'Generate for All Platforms' }).click();
-    await page.waitForTimeout(1000);
+    await page.getByRole('button', { name: 'Try Sample Post' }).click();
     await page.getByRole('button', { name: /LinkedIn/ }).click();
-    // The output should show LinkedIn content in the output area (not in textarea)
-    await expect(page.locator('.whitespace-pre-wrap').filter({ hasText: /Building a Real-Time Collaborative Editor/ }).first()).toBeVisible();
+    await expect(page.getByText('Building a Real-Time Collaborative Editor with CRDTs').first()).toBeVisible();
   });
 });

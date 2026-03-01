@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and discussion
+    url: https://github.com/mohitSharma74/contentseed/discussions
+    about: Use Discussions for Q&A, idea validation, and open-ended conversation.
+  - name: Security vulnerability report
+    url: mailto:mohit.sharma24546@gmail.com
+    about: Please report security issues privately by email.

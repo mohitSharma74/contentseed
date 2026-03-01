@@ -1,0 +1,42 @@
+name: Feature request
+description: Propose an improvement.
+title: "[Feature]: "
+labels: ["type: enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share the problem first, then a concrete proposal.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What user or developer pain does this solve?
+      placeholder: Describe the current limitation.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What should change?
+      placeholder: Describe expected behavior and scope.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any alternatives or tradeoffs considered.
+    validations:
+      required: false
+  - type: dropdown
+    id: contribution
+    attributes:
+      label: Contribution intent
+      options:
+        - I can open a PR for this
+        - I need maintainer implementation
+        - Not sure yet
+    validations:
+      required: true
